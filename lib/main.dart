@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:comogasto_fp2/month_widget.dart';
 
 void main() => runApp(MyApp());
 
@@ -25,13 +27,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   PageController _controller;
   int currentPage = 9;
+  Stream<QuerySnapshot> _query;
+
   @override
   void initState(){
     super.initState();
+
+    _query = Firestore.instance
+      .collection('expenses')
+      .where('month', isEqualTo: currentPage +1)
+      .snapshots();
+
     _controller=PageController(
       initialPage: currentPage, //pagina inicial,
       viewportFraction: 0.3,
-
     );
   }
 
@@ -76,13 +85,17 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: <Widget>[
           _selector(),
-          _expenses(),
-          _graph(),
-          Container(
-            color: Colors.blueGrey.withOpacity(0.1),
-            height: 20.0,
-          ),
-          _list(),
+          StreamBuilder<QuerySnapshot>(
+            stream: _query,
+            builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> data){
+              if (data.hasData){
+                return MonthWidget(
+                  documents: data.data.documents);
+              }
+              return Center(
+                child: CircularProgressIndicator(),);            
+          },),
+          
         ],),);
   }
   Widget _pageItem(String name, int pos){
@@ -117,7 +130,11 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: (newPage){
           setState(() {
             currentPage = newPage;
-          });
+            _query = Firestore.instance
+              .collection('expenses')
+              .where('month', isEqualTo: currentPage +1)
+              .snapshots();
+            });
         },
         controller: _controller,
         children: <Widget>[
@@ -134,52 +151,5 @@ class _HomePageState extends State<HomePage> {
           _pageItem("Novimbre",10),
           _pageItem("Diciembre",11),
     ],),);
-  }
-  Widget _expenses(){
-    return Column(
-      children: <Widget>[
-        Text("\$ 2361.41",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 40.0,
-            color: Colors.blueAccent,
-            ),),
-        Text("Gastos Totales",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16.0,
-            color: Colors.grey,
-            ),),
-      ],
-    );
-  }
-  Widget _graph() => Container();
-  Widget _item(IconData icon, String name, int percent, double value){
-    return ListTile(
-      leading: Icon(icon, size: 32.0,),
-      title: Text(name,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 20.0
-          ),),
-      subtitle: Text("$percent% de los gastos",
-        style: TextStyle(
-          fontSize: 16.0,
-          color: Colors.grey
-          ),),
-      trailing: Text("\$$value",
-        style: TextStyle(
-          fontSize: 20.0,
-          color: Colors.blueAccent,
-          fontWeight: FontWeight.bold
-          ), ),
-    );
-  }
-  Widget _list() {
-    return Expanded(
-      child: ListView(
-        children: <Widget>[
-          _item(FontAwesomeIcons.shoppingCart, "Compras", 14, 1516.2),
-      ],),);
   }
 }
