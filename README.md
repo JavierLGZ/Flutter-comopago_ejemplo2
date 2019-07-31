@@ -2,6 +2,11 @@
 
 A new Flutter project.
 
+codigo de aprendizaje de flutter y dart. basada en el curso de flutter del canal de youtube Ricardo Markiewicz (https://www.youtube.com/channel/UCqMwm3oGe6BhJUOrBdfnAEA)
+
+
+codigo: https://github.com/Gazer/como-gasto/tree/s01e08
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
